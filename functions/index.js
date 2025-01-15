@@ -2,33 +2,34 @@ import express from 'express';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import * as functions from 'firebase-functions'
 
 dotenv.config();
 
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({ origin: true }));
 app.use(express.json());
 
 // Configure nodemailer
 const transporter = nodemailer.createTransport({
-    host: 'smtp.zoho.com',
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD
-    },
-    tls: {
-        rejectUnauthorized: false
-    }
+  host: 'smtp.zoho.com',
+  port: 587,
+  secure: false,
+  auth: {
+    user: "valique.admin@valique.ai",
+    pass: "rt5LnVLrtgCL"
+  },
+  tls: {
+    rejectUnauthorized: false
+  }
 });
 
 const getHtmlContent = (
-    address, agreeResponsibilities, agreeTerms, blockchainExperience, confirmInformation, createdAt, dob, email, firstName, lastName, nationality, paymentMethod, professionalBackground, technicalSkills, walletAddress, hash, price, tokenURI
+  address, agreeResponsibilities, agreeTerms, blockchainExperience, confirmInformation, createdAt, dob, email, firstName, lastName, nationality, paymentMethod, professionalBackground, technicalSkills, walletAddress, hash, price, tokenURI
 ) => {
-    return `
+  return `
       <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; border-radius: 8px; background-color: #f9f9f9;">
         <h2 style="color: #4caf50; text-align: center;">Thank You for Becoming a Validator!</h2>
         <p style="font-size: 16px; color: #333;">
@@ -120,39 +121,42 @@ const getHtmlContent = (
 
 // Email sending endpoint
 app.post('/api/send-email', async (req, res) => {
-    try {
-        const { address, agreeResponsibilities, agreeTerms, blockchainExperience, confirmInformation, createdAt, dob, email, firstName, lastName, nationality, paymentMethod, professionalBackground, technicalSkills, walletAddress, hash, price, tokenURI, } = req.body;
-        const subject = "NO REPLY VALIQUE"
-        // Validate inputs
-        if (!email || !subject) {
-            return res.status(400).json({ message: 'Missing required fields' });
-        }
-
-        const html = getHtmlContent(address, agreeResponsibilities, agreeTerms, blockchainExperience, confirmInformation, createdAt, dob, email, firstName, lastName, nationality, paymentMethod, professionalBackground, technicalSkills, walletAddress, hash, price, tokenURI)
-
-        // Email options
-        const mailOptions = {
-            from: process.env.EMAIL_USER,
-            to: email,
-            subject,
-            html
-        };
-
-        // Send email
-        await transporter.sendMail(mailOptions);
-
-        res.status(200).json({ message: 'Email sent successfully' });
-        console.log("Message sent successfully")
-    } catch (error) {
-        console.error('Email sending error:', error);
-        res.status(500).json({
-            message: 'Failed to send email',
-            error: error.message
-        });
+  try {
+    const { address, agreeResponsibilities, agreeTerms, blockchainExperience, confirmInformation, createdAt, dob, email, firstName, lastName, nationality, paymentMethod, professionalBackground, technicalSkills, walletAddress, hash, price, tokenURI, } = req.body;
+    const subject = "NO REPLY VALIQUE"
+    // Validate inputs
+    if (!email || !subject) {
+      return res.status(400).json({ message: 'Missing required fields' });
     }
+
+    const html = getHtmlContent(address, agreeResponsibilities, agreeTerms, blockchainExperience, confirmInformation, createdAt, dob, email, firstName, lastName, nationality, paymentMethod, professionalBackground, technicalSkills, walletAddress, hash, price, tokenURI)
+
+    // Email options
+    const mailOptions = {
+      from: "valique.admin@valique.ai",
+      to: email,
+      subject,
+      cc: 'umrav.singhagam@gmail.com',
+      html,
+    };
+
+    // Send email
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({ message: 'Email sent successfully' });
+    console.log("Message sent successfully")
+  } catch (error) {
+    console.error('Email sending error:', error);
+    res.status(500).json({
+      message: 'Failed to send email',
+      error: error.message
+    });
+  }
 });
 
-const PORT = process.env.PORT || 3001;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+// const PORT = 3001;
+// app.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+// });
+
+export const api = functions.https.onRequest(app)
